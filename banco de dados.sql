@@ -5,258 +5,189 @@ CREATE DATABASE IF NOT EXISTS escala_expurgo;
 USE escala_expurgo;
 
 
-CREATE TABLE cargo (
-    id_cargo INT AUTO_INCREMENT PRIMARY KEY,
-    nome_cargo VARCHAR(100) NOT NULL,
-    pode_editar BOOLEAN NOT NULL DEFAULT FALSE
+CREATE TABLE arquivo (
+    id_arquivo INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255),
+    arquivo BLOB
 );
 
 
-CREATE TABLE unidade (
-    id_unidade INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(150) NOT NULL,
-    endereco VARCHAR(200),
-    telefone VARCHAR(20)
+CREATE TABLE perfil (
+    cpf VARCHAR(14) PRIMARY KEY,
+    nome VARCHAR(255),
+    email VARCHAR(255),
+    cargo VARCHAR(255)
 );
 
 
 CREATE TABLE usuario (
-    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
-    nome_completo VARCHAR(150) NOT NULL,
-    data_nascimento DATE NOT NULL,
-    cpf CHAR(11) NOT NULL UNIQUE,
-    email VARCHAR(150) NOT NULL UNIQUE,
-    senha VARCHAR(255) NOT NULL,
-    data_admissao DATE NOT NULL,
-    foto_perfil VARCHAR(255),
-
-    id_cargo INT NOT NULL,
-    id_unidade INT NOT NULL,
-
-    FOREIGN KEY (id_cargo)
-        REFERENCES cargo(id_cargo),
-
-    FOREIGN KEY (id_unidade)
-        REFERENCES unidade(id_unidade)
+    id_cadastrar INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255),
+    cpf VARCHAR(14),
+    email VARCHAR(255),
+    cargo VARCHAR(255)
 );
 
 
 CREATE TABLE escala (
     id_escala INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
-    data_inicio DATE NOT NULL,
-    data_fim DATE NOT NULL,
-    edicao_bloqueada BOOLEAN NOT NULL DEFAULT FALSE,
-
-    id_unidade INT NOT NULL,
-
-    FOREIGN KEY (id_unidade)
-        REFERENCES unidade(id_unidade)
+    nome VARCHAR(255),
+    data_inicio DATE,
+    data_fim DATE
 );
 
 
-CREATE TABLE plantao (
-    id_plantao INT AUTO_INCREMENT PRIMARY KEY,
-    data_plantao DATE NOT NULL,
-    horario_inicio TIME NOT NULL,
-    horario_fim TIME NOT NULL,
-    status VARCHAR(30) NOT NULL DEFAULT 'Agendado',
-
-    id_escala INT NOT NULL,
-    id_usuario INT NOT NULL,
-
-    FOREIGN KEY (id_escala)
-        REFERENCES escala(id_escala),
-
-    FOREIGN KEY (id_usuario)
-        REFERENCES usuario(id_usuario)
+CREATE TABLE atestado (
+    id_atestado INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255),
+    tipo VARCHAR(255),
+    data_inicio DATE,
+    data_fim DATE
 );
 
-
-CREATE TABLE disponibilidade (
-    id_disponibilidade INT AUTO_INCREMENT PRIMARY KEY,
-    data_inicio DATETIME NOT NULL,
-    data_fim DATETIME NOT NULL,
-    motivo VARCHAR(255),
-
-    id_usuario INT NOT NULL,
-
-    FOREIGN KEY (id_usuario)
-        REFERENCES usuario(id_usuario)
-);
-Banco de dados: Escala de Expurgo 
-
-CREATE TABLE documento (
-    id_documento INT AUTO_INCREMENT PRIMARY KEY,
-    tipo VARCHAR(50) NOT NULL,
-    arquivo VARCHAR(255) NOT NULL,
-    data_envio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    id_disponibilidade INT NOT NULL UNIQUE,
-
-    FOREIGN KEY (id_disponibilidade)
-        REFERENCES disponibilidade(id_disponibilidade)
-);
-
-CREATE TABLE troca_plantao (
-    id_troca INT AUTO_INCREMENT PRIMARY KEY,
-    data_solicitacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(30) NOT NULL DEFAULT 'Pendente',
-
-    id_plantao_origem INT NOT NULL,
-    id_plantao_destino INT NOT NULL,
-    id_solicitante INT NOT NULL,
-    id_destinatario INT NOT NULL,
-
-    FOREIGN KEY (id_plantao_origem)
-        REFERENCES plantao(id_plantao),
-
-    FOREIGN KEY (id_plantao_destino)
-        REFERENCES plantao(id_plantao),
-
-    FOREIGN KEY (id_solicitante)
-        REFERENCES usuario(id_usuario),
-
-    FOREIGN KEY (id_destinatario)
-        REFERENCES usuario(id_usuario)
-);
-
-CREATE TABLE notificacao (
-    id_notificacao INT AUTO_INCREMENT PRIMARY KEY,
-    mensagem VARCHAR(255) NOT NULL,
-    data_envio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    visualizada BOOLEAN NOT NULL DEFAULT FALSE,
-
-    id_usuario INT NOT NULL,
-
-    FOREIGN KEY (id_usuario)
-        REFERENCES usuario(id_usuario)
-);
-
-CREATE TABLE chat (
-    id_chat INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
-
-    id_unidade INT NOT NULL UNIQUE,
-
-    FOREIGN KEY (id_unidade)
-        REFERENCES unidade(id_unidade)
-);
 
 CREATE TABLE mensagem (
     id_mensagem INT AUTO_INCREMENT PRIMARY KEY,
-    conteudo TEXT NOT NULL,
-    data_envio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    id_chat INT NOT NULL,
-    id_usuario INT NOT NULL,
-
-    FOREIGN KEY (id_chat)
-        REFERENCES chat(id_chat),
-
-    FOREIGN KEY (id_usuario)
-        REFERENCES usuario(id_usuario)
+    nome VARCHAR(255),
+    texto VARCHAR(1000)
 );
 
+
 -- INSERÇÃO DE DADOS PARA TESTES
-
-INSERT INTO cargo (nome_cargo, pode_editar) VALUES
-('Administrador', TRUE),
-('Enfermeiro Responsável', TRUE),
-('Técnico de Enfermagem', FALSE);
+USE escala_expurgo;
 
 
-INSERT INTO unidade (nome, endereco, telefone) VALUES
-('Hospital Santa Clara', 'Rua Central, 100', '(48) 3333-1111'),
-('Clínica Vida', 'Rua das Flores, 250', '(48) 3333-2222');
+INSERT INTO arquivo (nome, arquivo) VALUES
+('atestado_ana.pdf', NULL),
+('declaracao_carlos.pdf', NULL),
+('atestado_mariana.pdf', NULL);
 
 
-INSERT INTO usuario
-(nome_completo, data_nascimento, cpf, email, senha,
- data_admissao, id_cargo, id_unidade)
-VALUES
-('Ana Souza', '1990-05-12', '11111111111',
- 'ana@email.com', 'hash_teste_ana',
- '2022-03-10', 1, 1),
-
-('Carlos Mendes', '1985-08-20', '22222222222',
- 'carlos@email.com', 'hash_teste_carlos',
- '2021-06-15', 2, 1),
-
-('Mariana Lima', '1998-11-03', '33333333333',
- 'mariana@email.com', 'hash_teste_mariana',
- '2023-01-20', 3, 1),
-
-('Pedro Alves', '1992-02-18', '44444444444',
- 'pedro@email.com', 'hash_teste_pedro',
- '2022-09-05', 3, 2);
+INSERT INTO perfil (cpf, nome, email, cargo) VALUES
+('11111111111', 'Ana Souza', 'ana@email.com', 'Administrador'),
+('22222222222', 'Carlos Mendes', 'carlos@email.com', 'Enfermeiro'),
+('33333333333', 'Mariana Lima', 'mariana@email.com', 'Técnico de Enfermagem'),
+('44444444444', 'Pedro Alves', 'pedro@email.com', 'Técnico de Enfermagem');
 
 
-INSERT INTO escala
-(nome, data_inicio, data_fim, edicao_bloqueada, id_unidade)
-VALUES
-('Escala Novembro 2026', '2026-11-01', '2026-11-30', FALSE, 1),
-('Escala Novembro 2026 - Clínica', '2026-11-01', '2026-11-30', FALSE, 2);
+INSERT INTO usuario (nome, cpf, email, cargo) VALUES
+('Ana Souza', '11111111111', 'ana@email.com', 'Administrador'),
+('Carlos Mendes', '22222222222', 'carlos@email.com', 'Enfermeiro'),
+('Mariana Lima', '33333333333', 'mariana@email.com', 'Técnico de Enfermagem'),
+('Pedro Alves', '44444444444', 'pedro@email.com', 'Técnico de Enfermagem');
 
 
-INSERT INTO plantao
-(data_plantao, horario_inicio, horario_fim, status,
- id_escala, id_usuario)
-VALUES
-('2026-11-12', '07:00:00', '19:00:00', 'Agendado', 1, 1),
-('2026-11-13', '07:00:00', '19:00:00', 'Agendado', 1, 2),
-('2026-11-14', '19:00:00', '07:00:00', 'Agendado', 1, 3),
-('2026-11-15', '07:00:00', '19:00:00', 'Agendado', 2, 4);
+INSERT INTO escala (nome, data_inicio, data_fim) VALUES
+('Escala Novembro 2026', '2026-11-01', '2026-11-30'),
+('Escala Dezembro 2026', '2026-12-01', '2026-12-31'),
+('Escala Janeiro 2027', '2027-01-01', '2027-01-31');
 
 
-INSERT INTO disponibilidade
-(data_inicio, data_fim, motivo, id_usuario)
-VALUES
-('2026-11-20 07:00:00', '2026-11-21 19:00:00',
- 'Compromisso pessoal', 3),
-
-('2026-11-25 00:00:00', '2026-11-26 23:59:00',
- 'Indisponibilidade temporária', 2);
+INSERT INTO atestado (nome, tipo, data_inicio, data_fim) VALUES
+('Ana Souza', 'Atestado médico', '2026-11-10', '2026-11-12'),
+('Carlos Mendes', 'Declaração médica', '2026-11-15', '2026-11-15'),
+('Mariana Lima', 'Atestado médico', '2026-12-03', '2026-12-07');
 
 
-INSERT INTO documento
-(tipo, arquivo, id_disponibilidade)
-VALUES
-('Atestado médico', 'atestados/atestado_mariana.pdf', 1);
-
-
-INSERT INTO troca_plantao
-(status, id_plantao_origem, id_plantao_destino,
- id_solicitante, id_destinatario)
-VALUES
-('Pendente', 1, 2, 1, 2);
+INSERT INTO mensagem (nome, texto) VALUES
+('Ana Souza', 'Olá! Alguém gostaria de trocar o plantão do dia 15?'),
+('Carlos Mendes', 'Tenho disponibilidade para realizar a troca.'),
+('Mariana Lima', 'Preciso organizar minha escala da próxima semana.'),
+('Pedro Alves', 'Alguém pode assumir meu plantão de domingo?'),
+('Ana Souza', 'A escala de novembro foi atualizada!');
 
 
 
-INSERT INTO notificacao
-(mensagem, visualizada, id_usuario)
-VALUES
-('Você possui uma nova solicitação de troca de plantão.', FALSE, 2),
-
-('Sua escala de novembro foi atualizada.', TRUE, 1);
-
-
-INSERT INTO chat (nome, id_unidade) VALUES
-('Chat - Hospital Santa Clara', 1),
-('Chat - Clínica Vida', 2);
+-- CONSULTAS SQL
+SELECT
+    usuario.nome AS usuario,
+    usuario.cpf,
+    perfil.email,
+    perfil.cargo
+FROM usuario
+INNER JOIN perfil
+    ON usuario.cpf = perfil.cpf;
 
 
+SELECT
+    escala.nome AS escala,
+    escala.data_inicio,
+    escala.data_fim,
+    usuario.nome AS responsavel
+FROM escala
+INNER JOIN usuario
+    ON escala.id_usuario = usuario.id_cadastrar;
 
-INSERT INTO mensagem (conteudo, id_chat, id_usuario) VALUES
-('Olá! Alguém gostaria de trocar o plantão do dia 12?',
- 1, 1),
 
-('Tenho interesse na troca. Podemos conversar!',
- 1, 2),
+SELECT
+    usuario.nome AS profissional,
+    atestado.tipo,
+    atestado.data_inicio,
+    atestado.data_fim
+FROM atestado
+INNER JOIN usuario
+    ON atestado.id_usuario = usuario.id_cadastrar;
 
-('Precisamos organizar a escala da próxima semana.',
- 1, 3),
 
-('Bom dia! Vamos organizar os plantões da clínica.',
- 2, 4);
+SELECT
+    usuario.nome AS remetente,
+    mensagem.texto
+FROM mensagem
+INNER JOIN usuario
+    ON mensagem.id_usuario = usuario.id_cadastrar;
+
+
+SELECT
+    arquivo.nome AS nome_arquivo,
+    atestado.nome AS profissional,
+    atestado.tipo,
+    atestado.data_inicio,
+    atestado.data_fim
+FROM arquivo
+INNER JOIN atestado
+    ON arquivo.id_atestado = atestado.id_atestado;
+
+
+SELECT
+    id_cadastrar,
+    nome,
+    cpf,
+    email,
+    cargo
+FROM usuario
+ORDER BY nome;
+
+
+SELECT
+    id_escala,
+    nome,
+    data_inicio,
+    data_fim
+FROM escala
+WHERE data_inicio BETWEEN '2026-11-01' AND '2026-12-31';
+
+
+SELECT
+    id_atestado,
+    nome,
+    tipo,
+    data_inicio,
+    data_fim
+FROM atestado
+ORDER BY data_inicio;
+
+
+SELECT
+    id_mensagem,
+    nome,
+    texto
+FROM mensagem
+WHERE texto LIKE '%trocar%';
+
+
+SELECT
+    id_arquivo,
+    nome
+FROM arquivo
+ORDER BY nome;
 
