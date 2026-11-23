@@ -5,189 +5,220 @@ CREATE DATABASE IF NOT EXISTS escala_expurgo;
 USE escala_expurgo;
 
 
-CREATE TABLE arquivo (
-    id_arquivo INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(255),
-    arquivo BLOB
+CREATE TABLE cargo (
+    id_cargo INT AUTO_INCREMENT PRIMARY KEY,
+    nome_cargo VARCHAR(80) NOT NULL
 );
-
-
-CREATE TABLE perfil (
-    cpf VARCHAR(14) PRIMARY KEY,
-    nome VARCHAR(255),
-    email VARCHAR(255),
-    cargo VARCHAR(255)
-);
-
 
 CREATE TABLE usuario (
-    id_cadastrar INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(255),
-    cpf VARCHAR(14),
-    email VARCHAR(255),
-    cargo VARCHAR(255)
-);
+    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(120) NOT NULL,
+    cpf VARCHAR(11) NOT NULL UNIQUE,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    senha VARCHAR(255) NOT NULL,
+    id_cargo INT NOT NULL,
 
+    FOREIGN KEY (id_cargo) REFERENCES cargo(id_cargo)
+);
 
 CREATE TABLE escala (
     id_escala INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(255),
-    data_inicio DATE,
-    data_fim DATE
+    data_inicio DATE NOT NULL,
+    data_fim DATE NOT NULL
 );
 
+CREATE TABLE participante_escala (
+    id_participante INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    id_escala INT NOT NULL,
 
-CREATE TABLE atestado (
-    id_atestado INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(255),
-    tipo VARCHAR(255),
-    data_inicio DATE,
-    data_fim DATE
+    FOREIGN KEY (id_usuario)
+        REFERENCES usuario(id_usuario),
+
+    FOREIGN KEY (id_escala)
+        REFERENCES escala(id_escala),
+
+    UNIQUE (id_usuario, id_escala)
 );
-
 
 CREATE TABLE mensagem (
     id_mensagem INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(255),
-    texto VARCHAR(1000)
+    texto VARCHAR(1000) NOT NULL,
+    data_envio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id_usuario INT NOT NULL,
+
+    FOREIGN KEY (id_usuario)
+        REFERENCES usuario(id_usuario)
+);
+
+CREATE TABLE atestado (
+    id_atestado INT AUTO_INCREMENT PRIMARY KEY,
+    tipo VARCHAR(20) NOT NULL,
+    data_inicio DATE NOT NULL,
+    data_fim DATE NOT NULL,
+    id_usuario INT NOT NULL,
+
+    FOREIGN KEY (id_usuario)
+        REFERENCES usuario(id_usuario)
+);
+
+CREATE TABLE documento (
+    id_documento INT AUTO_INCREMENT PRIMARY KEY,
+    nome_arquivo VARCHAR(255) NOT NULL,
+    caminho_arquivo VARCHAR(500) NOT NULL,
+    id_atestado INT NOT NULL,
+
+    FOREIGN KEY (id_atestado)
+        REFERENCES atestado(id_atestado)
 );
 
 
 -- INSERÇÃO DE DADOS PARA TESTES
+
 USE escala_expurgo;
 
+INSERT INTO cargo (nome_cargo) VALUES
+('Administrador'),
+('Enfermeiro'),
+('Técnico de Enfermagem');
 
-INSERT INTO arquivo (nome, arquivo) VALUES
-('atestado_ana.pdf', NULL),
-('declaracao_carlos.pdf', NULL),
-('atestado_mariana.pdf', NULL);
-
-
-INSERT INTO perfil (cpf, nome, email, cargo) VALUES
-('11111111111', 'Ana Souza', 'ana@email.com', 'Administrador'),
-('22222222222', 'Carlos Mendes', 'carlos@email.com', 'Enfermeiro'),
-('33333333333', 'Mariana Lima', 'mariana@email.com', 'Técnico de Enfermagem'),
-('44444444444', 'Pedro Alves', 'pedro@email.com', 'Técnico de Enfermagem');
-
-
-INSERT INTO usuario (nome, cpf, email, cargo) VALUES
-('Ana Souza', '11111111111', 'ana@email.com', 'Administrador'),
-('Carlos Mendes', '22222222222', 'carlos@email.com', 'Enfermeiro'),
-('Mariana Lima', '33333333333', 'mariana@email.com', 'Técnico de Enfermagem'),
-('Pedro Alves', '44444444444', 'pedro@email.com', 'Técnico de Enfermagem');
+INSERT INTO usuario
+(nome, cpf, email, senha, id_cargo)
+VALUES
+('Ana Souza', '11111111111', 'ana@email.com', 'hash_ana', 1),
+('Carlos Mendes', '22222222222', 'carlos@email.com', 'hash_carlos', 2),
+('Mariana Lima', '33333333333', 'mariana@email.com', 'hash_mariana', 3),
+('Pedro Alves', '44444444444', 'pedro@email.com', 'hash_pedro', 3);
 
 
-INSERT INTO escala (nome, data_inicio, data_fim) VALUES
-('Escala Novembro 2026', '2026-11-01', '2026-11-30'),
-('Escala Dezembro 2026', '2026-12-01', '2026-12-31'),
-('Escala Janeiro 2027', '2027-01-01', '2027-01-31');
+INSERT INTO escala (data_inicio, data_fim) VALUES
+('2026-11-01', '2026-11-30'),
+('2026-12-01', '2026-12-31');
 
 
-INSERT INTO atestado (nome, tipo, data_inicio, data_fim) VALUES
-('Ana Souza', 'Atestado médico', '2026-11-10', '2026-11-12'),
-('Carlos Mendes', 'Declaração médica', '2026-11-15', '2026-11-15'),
-('Mariana Lima', 'Atestado médico', '2026-12-03', '2026-12-07');
+
+INSERT INTO participante_escala
+(id_usuario, id_escala)
+VALUES
+(1, 1),
+(2, 1),
+(3, 1),
+(4, 2),
+(1, 2);
 
 
-INSERT INTO mensagem (nome, texto) VALUES
-('Ana Souza', 'Olá! Alguém gostaria de trocar o plantão do dia 15?'),
-('Carlos Mendes', 'Tenho disponibilidade para realizar a troca.'),
-('Mariana Lima', 'Preciso organizar minha escala da próxima semana.'),
-('Pedro Alves', 'Alguém pode assumir meu plantão de domingo?'),
-('Ana Souza', 'A escala de novembro foi atualizada!');
+INSERT INTO mensagem (texto, id_usuario) VALUES
+('Olá! Alguém gostaria de trocar o plantão do dia 15?', 1),
+('Tenho disponibilidade para realizar a troca.', 2),
+('Precisamos organizar a escala da próxima semana.', 3),
+('Alguém pode assumir meu plantão de domingo?', 4);
 
+
+INSERT INTO atestado
+(tipo, data_inicio, data_fim, id_usuario)
+VALUES
+('Atestado médico', '2026-11-10', '2026-11-12', 1),
+('Declaração médica', '2026-11-15', '2026-11-15', 2),
+('Atestado médico', '2026-12-03', '2026-12-07', 3);
+
+
+INSERT INTO documento
+(nome_arquivo, caminho_arquivo, id_atestado)
+VALUES
+('atestado_ana.pdf', '/documentos/atestado_ana.pdf', 1),
+('declaracao_carlos.pdf', '/documentos/declaracao_carlos.pdf', 2),
+('atestado_mariana.pdf', '/documentos/atestado_mariana.pdf', 3);
 
 
 -- CONSULTAS SQL
+USE escala_expurgo;
+
 SELECT
-    usuario.nome AS usuario,
-    usuario.cpf,
-    perfil.email,
-    perfil.cargo
+    usuario.nome,
+    usuario.email,
+    cargo.nome_cargo
 FROM usuario
-INNER JOIN perfil
-    ON usuario.cpf = perfil.cpf;
-
+INNER JOIN cargo
+ON usuario.id_cargo = cargo.id_cargo;
 
 SELECT
-    escala.nome AS escala,
+    usuario.nome,
+    escala.id_escala,
     escala.data_inicio,
-    escala.data_fim,
-    usuario.nome AS responsavel
-FROM escala
+    escala.data_fim
+FROM participante_escala
 INNER JOIN usuario
-    ON escala.id_usuario = usuario.id_cadastrar;
-
+ON participante_escala.id_usuario = usuario.id_usuario
+INNER JOIN escala
+ON participante_escala.id_escala = escala.id_escala;
 
 SELECT
-    usuario.nome AS profissional,
+    usuario.nome,
+    mensagem.texto,
+    mensagem.data_envio
+FROM mensagem
+INNER JOIN usuario
+ON mensagem.id_usuario = usuario.id_usuario
+ORDER BY mensagem.data_envio DESC;
+
+SELECT
+    usuario.nome,
     atestado.tipo,
     atestado.data_inicio,
     atestado.data_fim
 FROM atestado
 INNER JOIN usuario
-    ON atestado.id_usuario = usuario.id_cadastrar;
-
-
-SELECT
-    usuario.nome AS remetente,
-    mensagem.texto
-FROM mensagem
-INNER JOIN usuario
-    ON mensagem.id_usuario = usuario.id_cadastrar;
-
+ON atestado.id_usuario = usuario.id_usuario;
 
 SELECT
-    arquivo.nome AS nome_arquivo,
-    atestado.nome AS profissional,
+    documento.nome_arquivo,
+    documento.caminho_arquivo,
     atestado.tipo,
-    atestado.data_inicio,
-    atestado.data_fim
-FROM arquivo
+    usuario.nome
+FROM documento
 INNER JOIN atestado
-    ON arquivo.id_atestado = atestado.id_atestado;
-
+ON documento.id_atestado = atestado.id_atestado
+INNER JOIN usuario
+ON atestado.id_usuario = usuario.id_usuario;
 
 SELECT
-    id_cadastrar,
-    nome,
-    cpf,
-    email,
-    cargo
-FROM usuario
-ORDER BY nome;
-
+    id_cargo,
+    nome_cargo
+FROM cargo
+ORDER BY nome_cargo;
 
 SELECT
     id_escala,
-    nome,
     data_inicio,
     data_fim
 FROM escala
-WHERE data_inicio BETWEEN '2026-11-01' AND '2026-12-31';
-
-
-SELECT
-    id_atestado,
-    nome,
-    tipo,
-    data_inicio,
-    data_fim
-FROM atestado
+WHERE data_inicio >= '2026-11-01'
 ORDER BY data_inicio;
 
-
 SELECT
-    id_mensagem,
-    nome,
-    texto
+    usuario.nome,
+    mensagem.texto,
+    mensagem.data_envio
 FROM mensagem
-WHERE texto LIKE '%trocar%';
-
+INNER JOIN usuario
+ON mensagem.id_usuario = usuario.id_usuario
+WHERE mensagem.texto LIKE '%trocar%'
+ORDER BY mensagem.data_envio DESC;
 
 SELECT
-    id_arquivo,
-    nome
-FROM arquivo
-ORDER BY nome;
+    usuario.nome,
+    atestado.tipo,
+    atestado.data_inicio,
+    atestado.data_fim
+FROM atestado
+INNER JOIN usuario
+ON atestado.id_usuario = usuario.id_usuario
+WHERE atestado.data_inicio BETWEEN '2026-11-01' AND '2026-11-30';
 
+SELECT
+    id_documento,
+    nome_arquivo,
+    caminho_arquivo,
+    id_atestado
+FROM documento
+ORDER BY nome_arquivo;
